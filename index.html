@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>НАК России - Новости в реальном времени</title>
+    <title>НАК России - Национальный антитеррористический комитет</title>
     <style>
         * {
             margin: 0;
@@ -28,6 +28,11 @@
         .header h1 {
             font-size: 22px;
             margin-bottom: 8px;
+        }
+        
+        .header p {
+            font-size: 13px;
+            opacity: 0.9;
         }
         
         .update-info {
@@ -57,7 +62,7 @@
             padding: 8px 16px;
             border-radius: 30px;
             font-size: 12px;
-            margin-top: 12px;
+            cursor: pointer;
         }
         
         .news-card {
@@ -88,7 +93,6 @@
             gap: 12px;
             font-size: 11px;
             color: #6b7280;
-            margin-bottom: 8px;
         }
         
         .loading {
@@ -104,6 +108,237 @@
             border-top-color: #002B5E;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
+            margin: 0 auto 12px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+        
+        .demo-notice {
+            background: #fef3c7;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            color: #92400e;
+        }
+        
+        .footer {
+            text-align: center;
+            font-size: 10px;
+            color: #9ca3af;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🛡️ Национальный антитеррористический комитет</h1>
+    <p>Новости с официального сайта nac.gov.ru</p>
+    <div class="update-info">
+        <span id="statusDot" class="status-badge status-offline"></span>
+        <span id="statusText">Загрузка...</span>
+        <button class="refresh-btn" onclick="refreshNews()">🔄 Обновить</button>
+    </div>
+</div>
+
+<div id="newsContainer">
+    <div class="loading">
+        <div class="spinner"></div>
+        <p>Загрузка новостей...</p>
+    </div>
+</div>
+
+<div class="footer">
+    <p>Источник: nac.gov.ru • Данные обновляются автоматически каждые 5 минут</p>
+</div>
+
+<script>
+    async function loadNews() {
+        const container = document.getElementById('newsContainer');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        
+        const proxyUrl = 'https://api.allorigins.win/get?url=';
+        const targetUrl = 'http://nac.gov.ru/';
+        
+        try {
+            statusText.textContent = 'Получение данных с nac.gov.ru...';
+            
+            const response = await fetch(`${proxyUrl}${encodeURIComponent(targetUrl)}`);
+            const data = await response.json();
+            
+            if (data.contents) {
+                const news = parseNewsFromHtml(data.contents);
+                
+                if (news.length > 0) {
+                    renderNews(news);
+                    statusDot.className = 'status-badge status-online';
+                    statusText.innerHTML = `✅ Загружено ${news.length} новостей • ${new Date().toLocaleTimeString()}`;
+                } else {
+                    throw new Error('Новости не найдены');
+                }
+            } else {
+                throw new Error('Не удалось загрузить страницу');
+            }
+            
+        } catch (error) {
+            console.error('Ошибка:', error);
+            statusDot.className = 'status-badge status-offline';
+            statusText.innerHTML = '⚠️ Сайт НАК временно недоступен';
+            showDemoNews();
+        }
+    }
+    
+    function parseNewsFromHtml(html) {
+        const news = [];
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        
+        const selectors = [
+            '.news-item', '.article', '.post', 
+            '.views-row', '.node-teaser', 'article',
+            '.item-list li', '.content-item'
+        ];
+        
+        for (const selector of selectors) {
+            const items = doc.querySelectorAll(selector);
+            if (items.length > 0) {
+                items.forEach((item, index) => {
+                    if (index < 10) {
+                        const titleEl = item.querySelector('h2, h3, h4, .title, a');
+                        let title = titleEl ? titleEl.textContent.trim() : '';
+                        
+                        if (!title || title.length < 10) {
+                            const allLinks = item.querySelectorAll('a');
+                            for (let link of allLinks) {
+                                const text = link.textContent.trim();
+                                if (text.length > 15 && text.length < 150) {
+                                    title = text;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        const linkEl = item.querySelector('a');
+                        let link = linkEl ? linkEl.getAttribute('href') : '';
+                        
+                        const dateEl = item.querySelector('.date, time, .post-date');
+                        let date = dateEl ? dateEl.textContent.trim() : '';
+                        
+                        if (title && title.length > 10 && title.length < 200) {
+                            news.push({
+                                title: title.substring(0, 120),
+                                link: link ? (link.startsWith('http') ? link : 'http://nac.gov.ru' + link) : '#',
+                                date: date || new Date().toLocaleDateString('ru-RU')
+                            });
+                        }
+                    }
+                });
+                if (news.length > 0) break;
+            }
+        }
+        
+        if (news.length === 0) {
+            const links = doc.querySelectorAll('a');
+            links.forEach((link, index) => {
+                if (index < 30 && news.length < 10) {
+                    const text = link.textContent.trim();
+                    const href = link.getAttribute('href');
+                    if (text && text.length > 20 && text.length < 150 && href && 
+                        (href.includes('/node/') || href.includes('/news/') || href.includes('/press/'))) {
+                        news.push({
+                            title: text.substring(0, 100),
+                            link: href.startsWith('http') ? href : 'http://nac.gov.ru' + href,
+                            date: new Date().toLocaleDateString('ru-RU')
+                        });
+                    }
+                }
+            });
+        }
+        
+        return news;
+    }
+    
+    function renderNews(news) {
+        const container = document.getElementById('newsContainer');
+        
+        if (!news || news.length === 0) {
+            container.innerHTML = '<div class="error">📭 Новости временно недоступны</div>';
+            return;
+        }
+        
+        container.innerHTML = news.map(item => `
+            <div class="news-card" onclick="window.open('${item.link}', '_blank')">
+                <div class="news-title">${escapeHtml(item.title)}</div>
+                <div class="news-meta">
+                    <span>📅 ${item.date}</span>
+                    <span>🔗 nac.gov.ru</span>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    function showDemoNews() {
+        const demoNews = [
+            { title: 'Состоялось заседание Национального антитеррористического комитета', date: '26 марта 2026' },
+            { title: 'В регионах России прошли антитеррористические учения', date: '25 марта 2026' },
+            { title: 'Опубликованы методические рекомендации по антитеррористической защищенности', date: '24 марта 2026' },
+            { title: 'НАК подвел итоги работы за 2025 год', date: '23 марта 2026' },
+            { title: 'Проведено совещание по вопросам противодействия экстремизму', date: '22 марта 2026' }
+        ];
+        
+        const container = document.getElementById('newsContainer');
+        container.innerHTML = `
+            <div class="demo-notice">
+                ⚠️ Сайт НАК временно недоступен. Показаны примеры новостей.
+            </div>
+            ${demoNews.map(item => `
+                <div class="news-card">
+                    <div class="news-title">${item.title}</div>
+                    <div class="news-meta"><span>📅 ${item.date}</span></div>
+                </div>
+            `).join('')}
+        `;
+    }
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    async function refreshNews() {
+        const btn = document.querySelector('.refresh-btn');
+        const originalText = btn.textContent;
+        btn.textContent = '🔄 Обновление...';
+        btn.disabled = true;
+        
+        await loadNews();
+        
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }
+    
+    loadNews();
+    setInterval(loadNews, 5 * 60 * 1000);
+</script>
+
+</body>
+</html>            animation: spin 0.8s linear infinite;
             margin: 0 auto 12px;
         }
         
