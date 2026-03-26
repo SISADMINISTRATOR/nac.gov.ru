@@ -63,7 +63,6 @@
             cursor: pointer;
         }
         
-        /* Форма добавления новости */
         .add-news-form {
             background: white;
             border-radius: 20px;
@@ -76,9 +75,6 @@
             font-size: 16px;
             color: #002B5E;
             margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
         
         .form-group {
@@ -104,6 +100,248 @@
             color: white;
             border: none;
             padding: 12px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .submit-btn:active {
+            background: #003A80;
+        }
+        
+        .news-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        
+        .news-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #002B5E;
+            line-height: 1.4;
+            margin-bottom: 8px;
+            padding-right: 30px;
+        }
+        
+        .news-description {
+            font-size: 13px;
+            color: #4b5563;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        
+        .news-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 11px;
+            color: #6b7280;
+        }
+        
+        .delete-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: #9ca3af;
+            padding: 4px 8px;
+            border-radius: 20px;
+        }
+        
+        .delete-btn:active {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+        }
+        
+        .footer {
+            text-align: center;
+            font-size: 10px;
+            color: #9ca3af;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #10b981;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            z-index: 1000;
+            animation: fadeOut 2s ease forwards;
+        }
+        
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; visibility: hidden; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🛡️ Национальный антитеррористический комитет</h1>
+    <p>Официальные новости</p>
+    <div class="update-info">
+        <span class="status-badge"></span>
+        <span id="statusText">Новости НАК России</span>
+        <button class="refresh-btn" onclick="loadNews()">🔄 Обновить</button>
+    </div>
+</div>
+
+<div class="add-news-form">
+    <h3>➕ Добавить новость</h3>
+    <div class="form-group">
+        <input type="text" id="newsTitle" placeholder="Заголовок новости" maxlength="150">
+    </div>
+    <div class="form-group">
+        <textarea id="newsDesc" placeholder="Описание (необязательно)" rows="2"></textarea>
+    </div>
+    <button class="submit-btn" onclick="addNews()">📢 Опубликовать новость</button>
+</div>
+
+<div id="newsContainer">
+    <div class="empty-state">📭 Загрузка новостей...</div>
+</div>
+
+<div class="footer">
+    <p>© 2026 Национальный антитеррористический комитет</p>
+</div>
+
+<script>
+    const STORAGE_KEY = 'nac_news';
+    
+    const defaultNews = [
+        { id: 1, date: "26 марта 2026", title: "Состоялось заседание Национального антитеррористического комитета", description: "В Москве под руководством Председателя НАК рассмотрены вопросы профилактики терроризма." },
+        { id: 2, date: "25 марта 2026", title: "В регионах России прошли антитеррористические учения", description: "Проведены плановые учения с участием силовых структур." },
+        { id: 3, date: "24 марта 2026", title: "Опубликованы методические рекомендации по антитеррористической защищенности", description: "Новые рекомендации для объектов критической инфраструктуры." }
+    ];
+    
+    function getNews() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            return JSON.parse(saved);
+        }
+        return defaultNews;
+    }
+    
+    function saveNews(news) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(news));
+    }
+    
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
+    }
+    
+    function addNews() {
+        const titleInput = document.getElementById('newsTitle');
+        const descInput = document.getElementById('newsDesc');
+        
+        const title = titleInput.value.trim();
+        if (!title) {
+            showToast('❌ Введите заголовок');
+            return;
+        }
+        
+        const news = getNews();
+        const today = new Date();
+        const dateStr = `${today.getDate()} ${today.toLocaleString('ru', { month: 'long' })} ${today.getFullYear()}`;
+        
+        const newNews = {
+            id: Date.now(),
+            date: dateStr,
+            title: title,
+            description: descInput.value.trim() || ''
+        };
+        
+        news.unshift(newNews);
+        saveNews(news);
+        
+        titleInput.value = '';
+        descInput.value = '';
+        
+        renderNews();
+        showToast('✅ Новость добавлена!');
+    }
+    
+    function deleteNews(id) {
+        const news = getNews();
+        const filtered = news.filter(item => item.id !== id);
+        saveNews(filtered);
+        renderNews();
+        showToast('🗑️ Новость удалена');
+    }
+    
+    function renderNews() {
+        const container = document.getElementById('newsContainer');
+        const news = getNews();
+        
+        if (!news || news.length === 0) {
+            container.innerHTML = '<div class="empty-state">📭 Новостей пока нет. Добавьте первую!</div>';
+            document.getElementById('statusText').innerHTML = '📰 0 новостей';
+            return;
+        }
+        
+        function escape(text) {
+            if (!text) return '';
+            return text.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+                return c;
+            });
+        }
+        
+        container.innerHTML = news.map(item => `
+            <div class="news-card">
+                <button class="delete-btn" onclick="deleteNews(${item.id})">✕</button>
+                <div class="news-title">${escape(item.title)}</div>
+                ${item.description ? `<div class="news-description">${escape(item.description)}</div>` : ''}
+                <div class="news-meta">
+                    <span>📅 ${escape(item.date)}</span>
+                    <span>📰 НАК России</span>
+                </div>
+            </div>
+        `).join('');
+        
+        document.getElementById('statusText').innerHTML = `📰 ${news.length} новостей`;
+    }
+    
+    function loadNews() {
+        renderNews();
+    }
+    
+    loadNews();
+</script>
+
+</body>
+</html>            padding: 12px 20px;
             border-radius: 30px;
             font-size: 14px;
             font-weight: 500;
