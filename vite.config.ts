@@ -15,7 +15,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "src"),
     },
   },
-  base: "/",
+  base: "/test4/", // ВАЖНО: это название вашего репозитория
   build: {
     outDir: "dist",
     assetsDir: "assets",
