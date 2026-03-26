@@ -65,6 +65,17 @@
             cursor: pointer;
         }
         
+        .add-news-btn {
+            background: #10b981;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+        
         .news-card {
             background: white;
             border-radius: 16px;
@@ -77,7 +88,6 @@
         
         .news-card:active {
             transform: scale(0.98);
-            background: #f9f9f9;
         }
         
         .news-title {
@@ -115,9 +125,181 @@
             to { transform: rotate(360deg); }
         }
         
-        .error {
-            background: #fee2e2;
-            color: #991b1b;
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+        }
+        
+        .footer {
+            text-align: center;
+            font-size: 10px;
+            color: #9ca3af;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .info-note {
+            background: #e0f2fe;
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-size: 12px;
+            color: #0369a1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🛡️ Национальный антитеррористический комитет</h1>
+    <p>Официальные новости</p>
+    <div class="update-info">
+        <span id="statusDot" class="status-badge status-offline"></span>
+        <span id="statusText">Загрузка...</span>
+        <button class="refresh-btn" onclick="loadNews()">🔄 Обновить</button>
+    </div>
+</div>
+
+<div id="newsContainer">
+    <div class="loading">
+        <div class="spinner"></div>
+        <p>Загрузка новостей...</p>
+    </div>
+</div>
+
+<div class="footer">
+    <p>© 2026 Национальный антитеррористический комитет</p>
+</div>
+
+<script>
+    // ⚠️ ЗАМЕНИ ЭТУ ССЫЛКУ НА ТВОЮ ИЗ GOOGLE SHEETS
+    const GOOGLE_SHEETS_URL = 'https://docs.google.com/spreadsheets/d/1xN64aYXjgGGoV92OQ03NUoyHMPgsXloT44JRL6qPsT8/pubhtml';
+    
+    async function loadNews() {
+        const container = document.getElementById('newsContainer');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        
+        try {
+            statusText.textContent = 'Загрузка новостей...';
+            
+            // Получаем данные из Google Sheets через прокси
+            const proxyUrl = 'https://api.allorigins.win/get?url=';
+            const response = await fetch(`${proxyUrl}${encodeURIComponent(GOOGLE_SHEETS_URL)}`);
+            const data = await response.json();
+            
+            if (data.contents) {
+                const news = parseGoogleSheet(data.contents);
+                
+                if (news.length > 0) {
+                    renderNews(news);
+                    statusDot.className = 'status-badge status-online';
+                    statusText.innerHTML = `✅ Загружено ${news.length} новостей • Обновлено: ${new Date().toLocaleTimeString()}`;
+                } else {
+                    throw new Error('Нет новостей');
+                }
+            } else {
+                throw new Error('Не удалось загрузить');
+            }
+            
+        } catch (error) {
+            console.error('Ошибка:', error);
+            statusDot.className = 'status-badge status-offline';
+            statusText.innerHTML = '⚠️ Используются локальные новости';
+            showLocalNews();
+        }
+    }
+    
+    function parseGoogleSheet(html) {
+        const news = [];
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        
+        // Ищем таблицу
+        const rows = doc.querySelectorAll('tr');
+        
+        rows.forEach((row, index) => {
+            if (index === 0) return; // пропускаем заголовок
+            
+            const cells = row.querySelectorAll('td, th');
+            if (cells.length >= 2) {
+                const date = cells[0] ? cells[0].textContent.trim() : '';
+                const title = cells[1] ? cells[1].textContent.trim() : '';
+                let link = cells[2] ? cells[2].textContent.trim() : '';
+                
+                if (title && title.length > 5 && !title.includes('Заголовок')) {
+                    news.push({
+                        title: title.substring(0, 150),
+                        date: date || new Date().toLocaleDateString('ru-RU'),
+                        link: link && link.startsWith('http') ? link : null
+                    });
+                }
+            }
+        });
+        
+        return news;
+    }
+    
+    function renderNews(news) {
+        const container = document.getElementById('newsContainer');
+        
+        if (!news || news.length === 0) {
+            container.innerHTML = '<div class="empty-state">📭 Новости временно отсутствуют</div>';
+            return;
+        }
+        
+        container.innerHTML = news.map(item => `
+            <div class="news-card" ${item.link ? `onclick="window.open('${item.link}', '_blank')"` : ''}>
+                <div class="news-title">${escapeHtml(item.title)}</div>
+                <div class="news-meta">
+                    <span>📅 ${item.date}</span>
+                    ${item.link ? '<span>🔗 Подробнее</span>' : '<span>📰 НАК России</span>'}
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    function showLocalNews() {
+        const localNews = [
+            { title: 'Состоялось заседание Национального антитеррористического комитета', date: '26 марта 2026' },
+            { title: 'В регионах России прошли антитеррористические учения', date: '25 марта 2026' },
+            { title: 'Опубликованы методические рекомендации по антитеррористической защищенности', date: '24 марта 2026' },
+            { title: 'НАК подвел итоги работы за 2025 год', date: '23 марта 2026' },
+            { title: 'Проведено совещание по вопросам противодействия экстремизму', date: '22 марта 2026' }
+        ];
+        
+        const container = document.getElementById('newsContainer');
+        container.innerHTML = `
+            <div class="info-note">
+                📌 Для добавления своих новостей создайте Google Sheets таблицу и укажите ссылку в коде.
+            </div>
+            ${localNews.map(item => `
+                <div class="news-card">
+                    <div class="news-title">${item.title}</div>
+                    <div class="news-meta"><span>📅 ${item.date}</span></div>
+                </div>
+            `).join('')}
+        `;
+    }
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Запускаем загрузку
+    loadNews();
+    
+    // Автообновление каждые 10 минут
+    setInterval(loadNews, 10 * 60 * 1000);
+</script>
+
+</body>
+</html>            color: #991b1b;
             padding: 16px;
             border-radius: 12px;
             font-size: 14px;
