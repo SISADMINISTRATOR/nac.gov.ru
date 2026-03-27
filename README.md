@@ -4,7 +4,7 @@
 
 ## Деплой на GitHub Pages
 
-Сайт доступен по адресу: `https://SISADMINISTRATOR.github.io/test4/`
+Сайт доступен по адресу: `https://SISADMINISTRATOR.github.io/nac.gov.ru
 
 ## Локальная разработка
 
