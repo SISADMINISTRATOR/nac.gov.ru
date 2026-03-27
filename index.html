@@ -37,6 +37,45 @@
             background: none;
             border: none;
             color: #666;
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>НАК России - Национальный антитеррористический комитет</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: system-ui, sans-serif;
+            background: #f0f0f0;
+            padding: 20px;
+        }
+        .top-bar {
+            background: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+        .top-left, .top-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .top-bar button, .top-bar a {
+            background: none;
+            border: none;
+            color: #666;
             cursor: pointer;
             font-size: 12px;
             text-decoration: none;
@@ -104,6 +143,365 @@
         }
         .form-card, .news-card {
             background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .form-card h2, .news-card h2 {
+            font-size: 18px;
+            color: #002B5E;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #eee;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .submit-btn {
+            background: #002B5E;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .submit-btn:hover {
+            background: #003a80;
+        }
+        .news-item {
+            padding: 16px 0;
+            border-bottom: 1px solid #eee;
+            position: relative;
+        }
+        .news-item:last-child {
+            border-bottom: none;
+        }
+        .news-date {
+            font-size: 11px;
+            color: #dc2626;
+            margin-bottom: 6px;
+        }
+        .news-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            padding-right: 40px;
+        }
+        .news-desc {
+            font-size: 13px;
+            color: #666;
+            margin-top: 6px;
+        }
+        .delete-btn {
+            position: absolute;
+            top: 16px;
+            right: 0;
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: #999;
+            padding: 0 8px;
+        }
+        .delete-btn:hover {
+            color: #dc2626;
+        }
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 11px;
+            color: #999;
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 90%;
+            width: 400px;
+            max-height: 80%;
+            overflow: auto;
+        }
+        .modal-content h3 {
+            color: #002B5E;
+            margin-bottom: 16px;
+        }
+        .modal-content p {
+            font-size: 14px;
+            color: #333;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+        }
+        .close-modal {
+            background: #002B5E;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<div class="top-bar">
+    <div class="top-left">
+        <button id="regionBtn" onclick="showRegionModal()">📍 Небогорская область</button>
+        <button id="visionBtn" onclick="showVisionModal()">👁️ Версия для слабовидящих</button>
+    </div>
+    <div class="top-right">
+        <div class="lang-switch">
+            <button id="langRuBtn" onclick="setLanguage('ru')" class="active">Рус</button>
+            <span>/</span>
+            <button id="langEnBtn" onclick="setLanguage('en')">En</button>
+        </div>
+    </div>
+</div>
+
+<div class="header">
+    <div class="emblem">🛡️</div>
+    <div class="title">
+        <h1 id="mainTitle">Национальный антитеррористический комитет</h1>
+    </div>
+</div>
+
+<div class="nav">
+    <button id="navAbout" onclick="showModalByType('about')">О Комитете</button>
+    <button id="navActivity" onclick="showModalByType('activity')">Деятельность НАК</button>
+    <button id="navTerror" onclick="showModalByType('terror')">Терроризму - НЕТ!</button>
+    <button id="navLaw" onclick="showModalByType('law')">Нормативная база</button>
+    <button id="navMedia" onclick="showModalByType('media')">Медиа</button>
+    <button id="navRegions" onclick="showModalByType('regions')">Регионы</button>
+</div>
+
+<div class="form-card">
+    <h2 id="formTitle">➕ Добавить новость</h2>
+    <input type="text" id="newsTitleInput" placeholder="Заголовок новости">
+    <textarea id="newsDescInput" placeholder="Описание (необязательно)" rows="2"></textarea>
+    <button class="submit-btn" id="submitBtn" onclick="addNews()">Опубликовать</button>
+</div>
+
+<div class="news-card">
+    <h2 id="newsListTitle">📰 Последние новости</h2>
+    <div id="newsContainer"></div>
+</div>
+
+<div class="footer">
+    <p id="footerText">© 2026 Национальный антитеррористический комитет | Небогорская область</p>
+</div>
+
+<script>
+    let news = [];
+    let currentLang = 'ru';
+    
+    const translations = {
+        ru: {
+            regionBtn: '📍 Небогорская область',
+            visionBtn: '👁️ Версия для слабовидящих',
+            mainTitle: 'Национальный антитеррористический комитет',
+            navAbout: 'О Комитете',
+            navActivity: 'Деятельность НАК',
+            navTerror: 'Терроризму - НЕТ!',
+            navLaw: 'Нормативная база',
+            navMedia: 'Медиа',
+            navRegions: 'Регионы',
+            formTitle: '➕ Добавить новость',
+            submitBtn: 'Опубликовать',
+            newsListTitle: '📰 Последние новости',
+            footerText: '© 2026 Национальный антитеррористический комитет | Небогорская область',
+            emptyNews: '📭 Новостей пока нет. Добавьте первую!',
+            titlePlaceholder: 'Заголовок новости',
+            descPlaceholder: 'Описание (необязательно)',
+            closeBtn: 'Закрыть'
+        },
+        en: {
+            regionBtn: '📍 Nebogorsk Oblast',
+            visionBtn: '👁️ Accessibility mode',
+            mainTitle: 'National Anti-Terrorism Committee',
+            navAbout: 'About Committee',
+            navActivity: 'NAC Activities',
+            navTerror: 'NO to Terrorism!',
+            navLaw: 'Legal Framework',
+            navMedia: 'Media',
+            navRegions: 'Regions',
+            formTitle: '➕ Add News',
+            submitBtn: 'Publish',
+            newsListTitle: '📰 Latest News',
+            footerText: '© 2026 National Anti-Terrorism Committee | Nebogorsk Oblast',
+            emptyNews: '📭 No news yet. Add the first one!',
+            titlePlaceholder: 'News title',
+            descPlaceholder: 'Description (optional)',
+            closeBtn: 'Close'
+        }
+    };
+    
+    const modalData = {
+        ru: {
+            about: { title: 'О Комитете', content: 'Национальный антитеррористический комитет (НАК) является органом, обеспечивающим координацию деятельности федеральных органов исполнительной власти, органов исполнительной власти субъектов Российской Федерации и органов местного самоуправления по противодействию терроризму. Председателем НАК является директор ФСБ России.' },
+            activity: { title: 'Деятельность НАК', content: 'Основные направления деятельности НАК:\n\n• Координация антитеррористической деятельности\n• Разработка мер по противодействию терроризму\n• Организация антитеррористических учений\n• Информирование населения о мерах безопасности\n• Международное сотрудничество в сфере борьбы с терроризмом' },
+            terror: { title: 'Терроризму - НЕТ!', content: 'Памятка гражданам:\n\n• Будьте бдительны! Обращайте внимание на подозрительные предметы и людей.\n• Не трогайте бесхозные вещи! Сообщите о них сотрудникам полиции.\n• При угрозе взрыва немедленно покиньте помещение.\n• Выучите телефоны экстренных служб: 101, 102, 112.\n• Сообщайте о подозрительной информации в правоохранительные органы.\n\nЕдиный телефон доверия: 8-800-XXX-XXXX' },
+            law: { title: 'Нормативная база', content: 'Основные документы:\n\n• Федеральный закон №35-ФЗ «О противодействии терроризму»\n• Концепция противодействия терроризму в РФ\n• Указы Президента РФ\n• Постановления Правительства РФ\n• Ведомственные приказы и инструкции' },
+            media: { title: 'Медиа', content: 'Медиаресурсы НАК:\n\n• Официальный сайт: nac.gov.ru\n• YouTube-канал с видеоматериалами учений\n• Телеграм-канал с оперативными новостями\n• Пресс-центр для представителей СМИ\n• Фотогалерея мероприятий НАК' },
+            regions: { title: 'Регионы', content: 'В субъектах Российской Федерации созданы антитеррористические комиссии. Они работают в каждом регионе, координируя деятельность местных органов власти и силовых структур по противодействию терроризму. На территории Небогорской области действует региональная антитеррористическая комиссия.' },
+            region: { title: 'Небогорская область', content: 'Небогорская область — субъект Российской Федерации. На территории области действует антитеррористическая комиссия, которая координирует деятельность по противодействию терроризму и экстремизму. Губернатор области уделяет особое внимание вопросам безопасности граждан.\n\nТелефон доверия УФСБ по Небогорской области: 8-800-XXX-XX-XX\nТелефон дежурной службы: 112' },
+            vision: { title: 'Версия для слабовидящих', content: 'Для слабовидящих пользователей рекомендуем:\n\n• Использовать сочетание клавиш Ctrl + для увеличения шрифта\n• В настройках браузера включить режим "Высокая контрастность"\n• На мобильных устройствах используйте масштабирование экрана\n\nСпециальная версия сайта с увеличенным шрифтом и высокой контрастностью находится в разработке.' }
+        },
+        en: {
+            about: { title: 'About the Committee', content: 'The National Anti-Terrorism Committee (NAC) is a body that coordinates the activities of federal executive bodies, executive bodies of constituent entities of the Russian Federation, and local governments in countering terrorism. The Chairman of the NAC is the Director of the FSB of Russia.' },
+            activity: { title: 'NAC Activities', content: 'Main areas of NAC activities:\n\n• Coordination of counter-terrorism activities\n• Development of counter-terrorism measures\n• Organization of counter-terrorism exercises\n• Public information on security measures\n• International cooperation in counter-terrorism' },
+            terror: { title: 'NO to Terrorism!', content: 'Citizen Guidelines:\n\n• Stay vigilant! Pay attention to suspicious objects and people.\n• Do not touch unattended items! Report them to police officers.\n• In case of explosion threat, leave the premises immediately.\n• Learn emergency numbers: 101, 102, 112.\n• Report suspicious information to law enforcement.\n\nEmergency hotline: 8-800-XXX-XXXX' },
+            law: { title: 'Legal Framework', content: 'Key Documents:\n\n• Federal Law No. 35-FZ "On Countering Terrorism"\n• Counter-Terrorism Concept of the Russian Federation\n• Presidential Decrees\n• Government Resolutions\n• Departmental Orders and Instructions' },
+            media: { title: 'Media', content: 'NAC Media Resources:\n\n• Official website: nac.gov.ru\n• YouTube channel with exercise videos\n• Telegram channel with operational news\n• Press center for media representatives\n• Photo gallery of NAC events' },
+            regions: { title: 'Regions', content: 'Anti-terrorism commissions have been established in the constituent entities of the Russian Federation. They operate in every region, coordinating the activities of local authorities and law enforcement agencies in countering terrorism. A regional anti-terrorism commission operates in the Nebogorsk Oblast.' },
+            region: { title: 'Nebogorsk Oblast', content: 'Nebogorsk Oblast is a federal subject of the Russian Federation. An anti-terrorism commission operates in the region, coordinating activities to counter terrorism and extremism. The Governor pays special attention to citizen security issues.\n\nFSB hotline for Nebogorsk Oblast: 8-800-XXX-XX-XX\nEmergency service: 112' },
+            vision: { title: 'Accessibility Mode', content: 'For visually impaired users, we recommend:\n\n• Use Ctrl + to increase font size\n• Enable "High Contrast" mode in browser settings\n• On mobile devices, use screen zoom\n\nA special version of the site with enlarged font and high contrast is under development.' }
+        }
+    };
+    
+    function setLanguage(lang) {
+        currentLang = lang;
+        
+        document.getElementById('langRuBtn').classList.toggle('active', lang === 'ru');
+        document.getElementById('langEnBtn').classList.toggle('active', lang === 'en');
+        
+        document.getElementById('regionBtn').textContent = translations[lang].regionBtn;
+        document.getElementById('visionBtn').textContent = translations[lang].visionBtn;
+        document.getElementById('mainTitle').textContent = translations[lang].mainTitle;
+        document.getElementById('navAbout').textContent = translations[lang].navAbout;
+        document.getElementById('navActivity').textContent = translations[lang].navActivity;
+        document.getElementById('navTerror').textContent = translations[lang].navTerror;
+        document.getElementById('navLaw').textContent = translations[lang].navLaw;
+        document.getElementById('navMedia').textContent = translations[lang].navMedia;
+        document.getElementById('navRegions').textContent = translations[lang].navRegions;
+        document.getElementById('formTitle').textContent = translations[lang].formTitle;
+        document.getElementById('submitBtn').textContent = translations[lang].submitBtn;
+        document.getElementById('newsListTitle').textContent = translations[lang].newsListTitle;
+        document.getElementById('footerText').textContent = translations[lang].footerText;
+        document.getElementById('newsTitleInput').placeholder = translations[lang].titlePlaceholder;
+        document.getElementById('newsDescInput').placeholder = translations[lang].descPlaceholder;
+        
+        renderNews();
+    }
+    
+    function loadNews() {
+        let saved = localStorage.getItem('nak_news_official');
+        if (saved) {
+            news = JSON.parse(saved);
+        }
+        renderNews();
+    }
+    
+    function saveNews() {
+        localStorage.setItem('nak_news_official', JSON.stringify(news));
+    }
+    
+    function addNews() {
+        let title = document.getElementById('newsTitleInput').value.trim();
+        if (title === '') {
+            alert(currentLang === 'ru' ? 'Введите заголовок новости' : 'Enter news title');
+            return;
+        }
+        
+        let now = new Date();
+        let date;
+        if (currentLang === 'ru') {
+            date = now.getDate() + ' ' + now.toLocaleString('ru', { month: 'long' }) + ' ' + now.getFullYear();
+        } else {
+            date = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        }
+        
+        let newNews = {
+            id: Date.now(),
+            title: title,
+            desc: document.getElementById('newsDescInput').value.trim(),
+            date: date
+        };
+        
+        news.unshift(newNews);
+        saveNews();
+        
+        document.getElementById('newsTitleInput').value = '';
+        document.getElementById('newsDescInput').value = '';
+        renderNews();
+    }
+    
+    function deleteNews(id) {
+        news = news.filter(function(n) {
+            return n.id !== id;
+        });
+        saveNews();
+        renderNews();
+    }
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        }).replace(/\n/g, '<br>');
+    }
+    
+    function renderNews() {
+        let container = document.getElementById('newsContainer');
+        
+        if (news.length === 0) {
+            container.innerHTML = '<div class="empty">' + translations[currentLang].emptyNews + '</div>';
+            return;
+        }
+        
+        let html = '';
+        for (let i = 0; i < news.length; i++) {
+            let n = news[i];
+            html += '<div class="news-item">';
+            html += '<button class="delete-btn" onclick="deleteNews(' + n.id + ')">✕</button>';
+            html += '<div class="news-date">📅 ' + escapeHtml(n.date) + '</div>';
+            html += '<div class="news-title">' + escapeHtml(n.title) + '</div>';
+            if (n.desc) html += '<div class="news-desc">' + escapeHtml(n.desc) + '</div>';
+            html += '</div>';
+        }
+        container.innerHTML = html;
+    }
+    
+    function closeModal() {
+        let modal = document.querySelector('.modal');
+        if (modal) modal.remove();
+    }
+    
+    function showModal(title, content) {
+        closeModal();
+        let modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3>${escapeHtml(title)}</h3>
+                <            background: white;
             border-radius: 16px;
             padding: 24px;
             margin-bottom: 24px;
