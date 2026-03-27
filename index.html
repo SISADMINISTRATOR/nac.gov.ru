@@ -262,8 +262,8 @@
 
 <div class="top-bar">
     <div class="top-left">
-        <button onclick="showRegion()">📍 Небогорская область</button>
-        <button onclick="showVision()">👁️ Версия для слабовидящих</button>
+        <button id="regionBtn" onclick="showRegion()">📍 Небогорская область</button>
+        <button id="visionBtn" onclick="showVision()">👁️ Версия для слабовидящих</button>
     </div>
     <div class="top-right">
         <div class="lang-switch">
@@ -271,7 +271,7 @@
             <span>/</span>
             <button id="enBtn" onclick="setLang('en')">En</button>
         </div>
-        <button onclick="showLoginModal()" style="background:#002B5E; color:white; padding:4px 12px; border-radius:20px;">🔐 Вход в систему</button>
+        <button id="loginTopBtn" onclick="showLoginModal()" style="background:#002B5E; color:white; padding:4px 12px; border-radius:20px;">🔐 Вход в систему</button>
     </div>
 </div>
 
@@ -283,13 +283,13 @@
 </div>
 
 <div class="nav">
-    <button onclick="showInfo('about')" id="aboutBtn">О Комитете</button>
-    <button onclick="showInfo('activity')" id="activityBtn">Деятельность НАК</button>
-    <button onclick="showInfo('terror')" id="terrorBtn">Терроризму - НЕТ!</button>
-    <button onclick="showInfo('law')" id="lawBtn">Нормативная база</button>
-    <button onclick="showInfo('media')" id="mediaBtn">Медиа</button>
-    <button onclick="showInfo('regions')" id="regionsBtn">Регионы</button>
-    <button onclick="showReportForm()" id="reportBtn" class="report-btn">📝 Подать заявление</button>
+    <button id="aboutBtn" onclick="showInfo('about')">О Комитете</button>
+    <button id="activityBtn" onclick="showInfo('activity')">Деятельность НАК</button>
+    <button id="terrorBtn" onclick="showInfo('terror')">Терроризму - НЕТ!</button>
+    <button id="lawBtn" onclick="showInfo('law')">Нормативная база</button>
+    <button id="mediaBtn" onclick="showInfo('media')">Медиа</button>
+    <button id="regionsBtn" onclick="showInfo('regions')">Регионы</button>
+    <button id="reportBtn" class="report-btn" onclick="showReportForm()">📝 Подать заявление</button>
 </div>
 
 <div class="news-card">
@@ -310,13 +310,6 @@
     const text = {
         ru: {
             mainTitle: 'Национальный антитеррористический комитет',
-            aboutBtn: 'О Комитете',
-            activityBtn: 'Деятельность НАК',
-            terrorBtn: 'Терроризму - НЕТ!',
-            lawBtn: 'Нормативная база',
-            mediaBtn: 'Медиа',
-            regionsBtn: 'Регионы',
-            reportBtn: '📝 Подать заявление',
             newsTitle: '📰 Официальные новости',
             footerText: '© 2026 Национальный антитеррористический комитет | Небогорская область',
             emptyNews: '📭 Новости будут добавлены позже',
@@ -325,8 +318,6 @@
             warningText: '⚠️ Внимание! Заведомо ложный вызов влечёт административную и уголовную ответственность.',
             liabilityLabel: 'Я ознакомлен и готов понести наказание за ложный вызов',
             submitBtn: '📨 Отправить заявление',
-            fillAlert: 'Заполните все поля',
-            confirmAlert: 'Подтвердите, что готовы нести ответственность за ложный вызов',
             submitAlert: 'Функция отправки заявления временно недоступна. Скоро будет добавлена.',
             loginTitle: '🔐 Вход в систему',
             loginLabel: 'Логин',
@@ -338,13 +329,6 @@
         },
         en: {
             mainTitle: 'National Anti-Terrorism Committee',
-            aboutBtn: 'About Committee',
-            activityBtn: 'NAC Activities',
-            terrorBtn: 'NO to Terrorism!',
-            lawBtn: 'Legal Framework',
-            mediaBtn: 'Media',
-            regionsBtn: 'Regions',
-            reportBtn: '📝 Submit Report',
             newsTitle: '📰 Official News',
             footerText: '© 2026 National Anti-Terrorism Committee | Nebogorsk Oblast',
             emptyNews: '📭 News will be added later',
@@ -353,8 +337,6 @@
             warningText: '⚠️ Attention! False report leads to administrative and criminal liability.',
             liabilityLabel: 'I acknowledge and accept liability for false reporting',
             submitBtn: '📨 Submit Report',
-            fillAlert: 'Please fill in all fields',
-            confirmAlert: 'Confirm that you accept liability for false reporting',
             submitAlert: 'Report submission is temporarily unavailable. Coming soon.',
             loginTitle: '🔐 System Login',
             loginLabel: 'Username',
@@ -393,40 +375,26 @@
         lang = newLang;
         document.getElementById('ruBtn').classList.toggle('active', lang === 'ru');
         document.getElementById('enBtn').classList.toggle('active', lang === 'en');
-        
         document.getElementById('mainTitle').innerText = text[lang].mainTitle;
-        document.getElementById('aboutBtn').innerText = text[lang].aboutBtn;
-        document.getElementById('activityBtn').innerText = text[lang].activityBtn;
-        document.getElementById('terrorBtn').innerText = text[lang].terrorBtn;
-        document.getElementById('lawBtn').innerText = text[lang].lawBtn;
-        document.getElementById('mediaBtn').innerText = text[lang].mediaBtn;
-        document.getElementById('regionsBtn').innerText = text[lang].regionsBtn;
-        document.getElementById('reportBtn').innerHTML = text[lang].reportBtn;
         document.getElementById('newsTitle').innerText = text[lang].newsTitle;
         document.getElementById('footerText').innerText = text[lang].footerText;
         document.getElementById('emptyNewsText').innerText = text[lang].emptyNews;
-        
         renderNews();
     }
     
     function loadNews() {
         let saved = localStorage.getItem('nac_public_news');
-        if (saved) {
-            news = JSON.parse(saved);
-        } else {
-            news = [];
-        }
+        if (saved) news = JSON.parse(saved);
+        else news = [];
         renderNews();
     }
     
     function renderNews() {
         let container = document.getElementById('newsList');
-        
         if (news.length === 0) {
-            container.innerHTML = '<div class="empty" id="emptyNewsText">' + text[lang].emptyNews + '</div>';
+            container.innerHTML = '<div class="empty">' + text[lang].emptyNews + '</div>';
             return;
         }
-        
         let html = '';
         for (let i = 0; i < news.length; i++) {
             let n = news[i];
@@ -447,25 +415,12 @@
             <div class="modal-content">
                 <h3>${text[lang].reportTitle}</h3>
                 <div class="warning">${text[lang].warningText}</div>
-                <div class="form-group">
-                    <input type="text" id="modal_rpUsername" placeholder="Ваш Username в Roblox">
-                </div>
-                <div class="form-group">
-                    <input type="text" id="modal_targetUsername" placeholder="Username человека на которого подаёте заявление">
-                </div>
-                <div class="form-group">
-                    <textarea id="modal_description" rows="3" placeholder="Описание нарушения (терракт, стрельба, неадекватное поведение, подготовка преступления и т.д.)"></textarea>
-                </div>
-                <div class="form-group">
-                    <input type="text" id="modal_rpFIO" placeholder="Ваше РП ФИО">
-                </div>
-                <div class="form-group">
-                    <input type="text" id="modal_targetFIO" placeholder="РП ФИО правонарушителя">
-                </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="modal_confirmLiability">
-                    <label for="modal_confirmLiability">${text[lang].liabilityLabel}</label>
-                </div>
+                <div class="form-group"><input type="text" id="modal_rpUsername" placeholder="Ваш Username в Roblox"></div>
+                <div class="form-group"><input type="text" id="modal_targetUsername" placeholder="Username человека на которого подаёте заявление"></div>
+                <div class="form-group"><textarea id="modal_description" rows="3" placeholder="Описание нарушения (терракт, стрельба, неадекватное поведение, подготовка преступления и т.д.)"></textarea></div>
+                <div class="form-group"><input type="text" id="modal_rpFIO" placeholder="Ваше РП ФИО"></div>
+                <div class="form-group"><input type="text" id="modal_targetFIO" placeholder="РП ФИО правонарушителя"></div>
+                <div class="checkbox-group"><input type="checkbox" id="modal_confirmLiability"><label for="modal_confirmLiability">${text[lang].liabilityLabel}</label></div>
                 <button class="submit-report" onclick="alert('${text[lang].submitAlert}'); closeModal();">${text[lang].submitBtn}</button>
                 <button class="close-modal" onclick="closeModal()" style="margin-top:12px; background:#666;">${text[lang].close}</button>
             </div>
@@ -480,14 +435,8 @@
         modal.innerHTML = `
             <div class="modal-content">
                 <h3>${text[lang].loginTitle}</h3>
-                <div class="login-input">
-                    <label>${text[lang].loginLabel}</label>
-                    <input type="text" id="loginUsername" placeholder="${text[lang].loginPlaceholder}">
-                </div>
-                <div class="login-input">
-                    <label>${text[lang].passwordLabel}</label>
-                    <input type="password" id="loginPassword" placeholder="${text[lang].passwordPlaceholder}">
-                </div>
+                <div class="login-input"><label>${text[lang].loginLabel}</label><input type="text" id="loginUsername" placeholder="${text[lang].loginPlaceholder}"></div>
+                <div class="login-input"><label>${text[lang].passwordLabel}</label><input type="password" id="loginPassword" placeholder="${text[lang].passwordPlaceholder}"></div>
                 <button class="login-btn" onclick="alert('${text[lang].loginAlert}'); closeModal();">${text[lang].loginBtn}</button>
                 <button class="close-modal" onclick="closeModal()" style="margin-top:12px; background:#666;">${text[lang].close}</button>
             </div>
@@ -514,4 +463,28 @@
         closeModal();
         let modal = document.createElement('div');
         modal.className = 'modal';
-        modal.innerHTML = 
+        modal.innerHTML = `<div class="modal-content"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(content)}</p><button class="close-modal" onclick="closeModal()">${text[lang].close}</button></div>`;
+        document.body.appendChild(modal);
+    }
+    
+    function showInfo(type) {
+        let data = infoData[lang][type];
+        if (data) showModal(data.title, data.content);
+    }
+    
+    function showRegion() {
+        let data = infoData[lang].region;
+        if (data) showModal(data.title, data.content);
+    }
+    
+    function showVision() {
+        let data = infoData[lang].vision;
+        if (data) showModal(data.title, data.content);
+    }
+    
+    loadNews();
+    setLang('ru');
+</script>
+
+</body>
+</html>
